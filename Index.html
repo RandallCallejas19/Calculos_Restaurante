@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cálculos Pago Cervecería Rancho Grande</title>
+    <link rel="stylesheet" href="Style.css">
+    <script src="Script.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Cálculos Pago Cervecería Rancho Grande</h1>
+        <table id="cervezaTable">
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th>Consignado</th>
+                    <th>Precio por Caja</th>
+                    <th>Bodega</th>
+                    <th>Barra</th>
+                    <th>Actual</th>
+                    <th>Vendido</th>
+                    <th>En Cajas</th>
+                    <th>Efectivo a Pagar</th>
+                    <th>Unidades Sobrantes</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Las filas se generarán dinámicamente con JavaScript -->
+            </tbody>
+        </table>
+        <div class="total">
+            <strong>Total Efectivo a Pagar: <span id="totalEfectivo">C$0</span></strong>
+        </div>
+    </div>
+
+    <!-- Modal para ingresar consignado y precio por caja -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Ingresar Datos de Consignado y Precio por Caja</h2>
+            <form id="modalForm">
+                <label for="consignado">Consignado:</label>
+                <input type="number" id="consignado" required>
+                <label for="precio">Precio por Caja:</label>
+                <input type="number" id="precio" required>
+                <button type="submit">Guardar</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="scripts.js"></script>
+</body>
+</html>
