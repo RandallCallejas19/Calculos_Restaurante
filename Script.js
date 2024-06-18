@@ -1,15 +1,20 @@
-const productos = [
-    "TOÑA VIDRIO", "CLÁSICA", "CLÁSICA SELECCIÓN MAESTRO", "FROST", "SMIRNOFF MANZANA",
-    "SOL", "BLISS", "HEINEKEN", "SMIRNOFF ORIGINAL", "SELTZER", "ADAN Y EVA", "BAMBOOO",
-    "BAMBOO 9.5", "FUSION", "MILLER LITE", "TOÑA LIGHT", "TOÑA LATA"
-];
-
 document.addEventListener('DOMContentLoaded', () => {
+    const productos = [
+        "TOÑA VIDRIO", "CLÁSICA", "CLÁSICA SELECCIÓN MAESTRO", "FROST", "SMIRNOFF MANZANA",
+        "SOL", "BLISS", "HEINEKEN", "SMIRNOFF ORIGINAL", "SELTZER", "ADAN Y EVA", "BAMBOOO",
+        "BAMBOO 9.5", "FUSION", "MILLER LITE", "TOÑA LIGHT", "TOÑA LATA"
+    ];
+
     const tableBody = document.querySelector('#cervezaTable tbody');
     const modal = document.getElementById("modal");
     const modalForm = document.getElementById("modalForm");
     const span = document.getElementsByClassName("close")[0];
     const totalEfectivoSpan = document.getElementById("totalEfectivo");
+    const generatePdfButton = document.getElementById("generatePdfButton");
+
+    let consignados = JSON.parse(localStorage.getItem('consignados')) || {};
+    let precios = JSON.parse(localStorage.getItem('precios')) || {};
+    let totalEfectivoGlobal = 0;
 
     productos.forEach(producto => {
         const row = document.createElement('tr');
@@ -27,9 +32,6 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
         tableBody.appendChild(row);
     });
-
-    const consignados = JSON.parse(localStorage.getItem('consignados')) || {};
-    const precios = JSON.parse(localStorage.getItem('precios')) || {};
 
     updateTable();
 
@@ -62,6 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
             totalEfectivo += efectivo;
         });
 
+        totalEfectivoGlobal = totalEfectivo;
         totalEfectivoSpan.textContent = `C$${totalEfectivo}`;
     }
 
@@ -117,4 +120,52 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById(type).value = type === 'consignado' ? consignados[producto] || 0 : precios[producto] || 0;
         modal.style.display = "block";
     }
+
+    const { jsPDF } = window.jspdf;
+
+    generatePdfButton.addEventListener('click', () => {
+        const doc = new jsPDF();
+        
+        // Obtener fecha y hora actuales
+        const date = new Date();
+        const formattedDate = `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
+        
+        // Agregar el título con la fecha y hora
+        doc.text(`Informe pago de cervecería - ${formattedDate}`, 10, 10);
+
+        // Recorrer cada fila de la tabla y agregarla al PDF
+        let rows = [];
+        document.querySelectorAll('#cervezaTable tbody tr').forEach(row => {
+            const producto = row.cells[0].textContent;
+            const consignado = consignados[producto] || 0;
+            const precio = precios[producto] || 0;
+            const bodega = row.querySelector('.bodega').value || 0;
+            const barra = row.querySelector('.barra').value || 0;
+            const actual = row.querySelector('.actual').value || 0;
+            const vendido = row.querySelector('.vendido').textContent;
+            const enCajas = row.querySelector('.en-cajas').textContent;
+            const efectivo = row.querySelector('.efectivo').textContent;
+            const sobrantes = row.querySelector('.sobrantes').textContent;
+
+            rows.push([producto, consignado, precio, bodega, barra, actual, vendido, enCajas, efectivo, sobrantes]);
+        });
+
+        doc.autoTable({
+            head: [['Producto', 'Consignado', 'Precio por Caja', 'Bodega', 'Barra', 'Actual', 'Vendido', 'En Cajas', 'Efectivo a Pagar', 'Unidades Sobrantes']],
+            body: rows,
+            startY: 20,
+            theme: 'grid',
+            styles: { fontSize: 10 },
+            headStyles: { fillColor: [22, 160, 133] }
+        });
+
+        // Añadir el total efectivo a pagar al final del PDF
+        const finalY = doc.lastAutoTable.finalY || 30; // Obtiene la última posición Y
+        doc.text(`Total Efectivo a Pagar: C$${totalEfectivoGlobal}`, 10, finalY + 10);
+
+        // Abre el PDF en una nueva ventana
+        const pdfDataUri = doc.output('datauristring');
+        const newWindow = window.open();
+        newWindow.document.write(`<iframe src="${pdfDataUri}" frameborder="0" style="width:100%; height:100%;"></iframe>`);
+    });
 });
